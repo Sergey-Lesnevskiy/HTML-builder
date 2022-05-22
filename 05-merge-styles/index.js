@@ -2,8 +2,8 @@ const fs = require('fs');
 
 
 const path = require('path');
-let arr_css=[];
 
+let arr_css=[];
 const writeFileAsync = async (path, data) => {
   return new Promise ((resolve,reject)=>fs.writeFile(path,data,(err)=>{
     if(err){
@@ -13,8 +13,7 @@ const writeFileAsync = async (path, data) => {
   }));
 };
 
-const readdirFiles = async (_path, extension) => {
-    
+const readdirFiles = async (_path, extension) => {  
   await  new Promise((resolve,reject)=> {
     fs.readdir((_path), 
       { withFileTypes: true },
@@ -52,7 +51,7 @@ const readFilefromArr = async (arr) => {
   })
   );
 };
-//можно было зелать без создания массива, но это называется ад колбеков
+
 // fs.readdir(path.join(__dirname, 'styles'), 
 //   { withFileTypes: true },
 //   (err, files) => {
@@ -75,5 +74,4 @@ const readFilefromArr = async (arr) => {
 writeFileAsync(path.join(__dirname,'project-dist','bundle.css'),'')
   .then(()=> readdirFiles(path.join(__dirname, 'styles'),'.css'))
   .then(()=> readFilefromArr(arr_css))
-  .then(()=>console.log(arr_css))
   .catch(err => console.log(err));
