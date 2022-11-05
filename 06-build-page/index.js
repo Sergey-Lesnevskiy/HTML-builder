@@ -154,7 +154,6 @@ promise10.then(()=>{
   });
 });
 
-
 fs.readdir(path.join(__dirname, 'assets','fonts'), 
   { withFileTypes: true },
   (err, files) => {
