@@ -1,100 +1,64 @@
-
-
-const fs = require('fs');
-
-
-
 const path = require('path');
+const fs  = require('fs');
+const fsPromise = require('fs/promises');
 
-fs.mkdir(path.join(__dirname,'project-dist'),{ recursive: true }, err => {
-  if(err) throw err; 
+
+
+const addMKDIRFileAsync = async (path1) => {
+ 
+  fsPromise.mkdir((path1),{ recursive: true });
+};
+
+const createHtml = async function () {
+
+  let template = await fsPromise.readFile(path.resolve(__dirname,'template.html'),'utf-8');
+  const components = await fsPromise.readdir(path.resolve(__dirname,'components'),{withFileTypes: true});
+
+  for await(let item of components) {
+    let fileName = item.name.split('.')[0];
+    let filePath = path.join(path.resolve(__dirname,'components'),item.name);
+    let fileChange = await fsPromise.readFile(filePath,'utf-8');
+    
+    if(template.includes( `{{${fileName}}}`)) {
+      template = template.replace(`{{${fileName}}}`,`${fileChange}`) ;
+    }
+  }
+  await fsPromise.writeFile(path.join(path.resolve(__dirname,'project-dist'),'index.html'),template);
+};
+
+const copyFolder = async function () {
+ 
+  const assetsFolders =  await fsPromise.readdir(path.resolve(__dirname,'assets'),{withFileTypes: true});
+ 
+  assetsFolders.forEach( async (item) => {
   
-});
-
-const promise= new Promise((resolve,reject)=>{
-  fs.readFile(path.join(__dirname,'components','header.html'),{encoding: 'utf-8'},(err,data)=>{
-    if (err) reject(err) ;
-    resolve(data);
-  }  
-  );
-});
-promise.then(data1=>{
-  const promise2 = new Promise((resolve,reject)=>{
-    fs.readFile(path.join(__dirname,'template.html'),{encoding: 'utf-8'},(err,data)=>{
-      if (err) reject(err) ;
-      if(data.includes('{{header}}')){
-        resolve(data.split('{{header}}').join(data1));
+    const itemFolder = path.join(path.resolve(__dirname,'assets'),item.name);
+    const itemFolderNew = path.join(path.resolve(__dirname,'project-dist','assets'),item.name);
+    if(item.isDirectory()) {
+      const innerAssetsFolders = await fsPromise.mkdir(itemFolderNew,{recursive: true});
+      if(!innerAssetsFolders) {
+        await fsPromise.rm(itemFolderNew,{recursive: true});
+        await fsPromise.mkdir(itemFolderNew);
       }
-    });
+      const files =  await fsPromise.readdir(itemFolder,{withFileTypes: true});
+      files.forEach(async (file) => {
+        let currentPathFile = path.join(itemFolder,file.name);
+        let currentPathNewFile = path.join(itemFolderNew,file.name);
+        await fsPromise.copyFile(currentPathFile,currentPathNewFile);
+      });
+    }
+  
   });
-  promise2.then(data2 =>{
-    const promise3 = new Promise((resolve,reject)=>{
-      fs.writeFile(path.join(__dirname,'project-dist','index.html'),data2,(err)=>{
-        if (err) reject(err) ;
-        
-        resolve();
-      });
-    });
-    promise3.then(()=>{
-      const promise4= new Promise((resolve,reject)=>{
-        fs.readFile(path.join(__dirname,'components','footer.html'),{encoding: 'utf-8'},(err,datafooter)=>{
-          if (err) reject(err) ;
-          resolve(datafooter);
-        }  
-        );
-      });
-      promise4.then(dataFoot=>{
-        const promise5 = new Promise((resolve,reject)=>{
-          fs.readFile(path.join(__dirname,'project-dist','index.html'),{encoding: 'utf-8'},(err,data)=>{
-            if (err) reject(err) ;
-            if(data.includes('{{footer}}')){
-              resolve(data.split('{{footer}}').join(dataFoot));
-            }
-          });
-        });
-        promise5.then(datafooter2=>{
-          const promise6 = new Promise((resolve,reject)=>{
-            fs.writeFile(path.join(__dirname,'project-dist','index.html'),datafooter2,(err)=>{
-              if (err) reject(err) ;
-              
-              resolve();
-            });
-          });
-          promise6.then(()=>{
-            const promise7= new Promise((resolve,reject)=>{
-              fs.readFile(path.join(__dirname,'components','articles.html'),{encoding: 'utf-8'},(err,dataarticles)=>{
-                if (err) reject(err) ;
-                resolve(dataarticles);
-              }  
-              );
-            });
-            promise7.then(dataarticles=>{
-              const promise8 = new Promise((resolve,reject)=>{
-                fs.readFile(path.join(__dirname,'project-dist','index.html'),{encoding: 'utf-8'},(err,data)=>{
-                  if (err) reject(err) ;
-                  if(data.includes('{{articles}}')){
-                    resolve(data.split('{{articles}}').join(dataarticles));
-                  }
-                });
-              });
-              promise8.then(dataarticles2=>{
-                const promise9 = new Promise((resolve,reject)=>{
-                  fs.writeFile(path.join(__dirname,'project-dist','index.html'),dataarticles2,(err)=>{
-                    if (err) reject(err) ;
-                    resolve();
-                  });
-                });
-                promise9.then(()=>{
-                  console.log('html create');
-                });
-              });
-            });
-          });
-        });
-      });
-    });
-  });
-});
+
+};
+
+async function creatHTMLBUILDER(){
+  await addMKDIRFileAsync(path.join(__dirname,'project-dist'));
+  await addMKDIRFileAsync(path.join(__dirname,'project-dist','assets'));
+  await createHtml();
+  await copyFolder();
+}
+creatHTMLBUILDER();
 
 fs.writeFile(path.join(__dirname,'project-dist','style.css'),'',(err)=>{
   if (err){ throw(err) ;}
@@ -113,90 +77,54 @@ fs.readdir(path.join(__dirname, 'styles'),
           readableStream.on('data', chunk => fs.appendFile(path.join(__dirname,'project-dist','style.css'),chunk,(err)=>{
             if(err)console.log(err);
           })
-            
           );
         }
       });
     }
   });
 
-const promise10 = new Promise((resolve,reject)=>{
-  fs.mkdir(path.join(__dirname,'project-dist','assets'), { recursive: true }, err => {
-    if(err) reject(err);
-    resolve();
-  });
-});
-promise10.then(()=>{
-  const promise11 = new Promise((resolve,reject)=>{
-    fs.mkdir(path.join(__dirname,'project-dist','assets','fonts'), { recursive: true }, err => {
-      if(err) reject(err);
-      resolve();
-    });
-  });
-  promise11.then(()=>{
-    const promise12 = new Promise((resolve,reject)=>{
-      fs.mkdir(path.join(__dirname,'project-dist','assets','img'), { recursive: true }, err => {
-        if(err) reject(err);
-        resolve();
-      });
-    });
-    promise12.then(()=>{
-      const promise13 = new Promise((resolve,reject)=>{
-        fs.mkdir(path.join(__dirname,'project-dist','assets','svg'), { recursive: true }, err => {
-          if(err) reject(err);
-          resolve();
-        });
-      });   
-      promise13.then(()=>{
-        console.log('folers created');
-      });
-    });
-  });
-});
-
-fs.readdir(path.join(__dirname, 'assets','fonts'), 
-  { withFileTypes: true },
-  (err, files) => {
-    if (err)
-      console.log(err);
-    else {
-      files.forEach(file => {
-        if(file.isFile()){
-          fs.copyFile( path.join(__dirname, 'assets','fonts',file.name), path.join(__dirname,'project-dist','assets','fonts',file.name), (err) => {
-            if (err) throw err;
-          });
-        }
-      });
-    }
-  });
-fs.readdir(path.join(__dirname, 'assets','img'), 
-  { withFileTypes: true },
-  (err, files) => {
-    if (err)
-      console.log(err);
-    else {
-      files.forEach(file => {
-        if(file.isFile()){
-          fs.copyFile( path.join(__dirname, 'assets','img',file.name), path.join(__dirname,'project-dist','assets','img',file.name), (err) => {
-            if (err) throw err;
-          });
-        }
-      });
-    }
-  });
-fs.readdir(path.join(__dirname, 'assets','svg'), 
-  { withFileTypes: true },
-  (err, files) => {
-    if (err)
-      console.log(err);
-    else {
-      files.forEach(file => {
-        if(file.isFile()){
-          fs.copyFile( path.join(__dirname, 'assets','svg',file.name), path.join(__dirname,'project-dist','assets','svg',file.name), (err) => {
-            if (err) throw err;
-          });
-        }
-      });
-    }
-  });
-  
+// fs.readdir(path.join(__dirname, 'assets','fonts'), 
+//   { withFileTypes: true },
+//   (err, files) => {
+//     if (err)
+//       console.log(err);
+//     else {
+//       files.forEach(file => {
+//         if(file.isFile()){
+//           fs.copyFile( path.join(__dirname, 'assets','fonts',file.name), path.join(__dirname,'project-dist','assets','fonts',file.name), (err) => {
+//             if (err) throw err;
+//           });
+//         }
+//       });
+//     }
+//   });
+// fs.readdir(path.join(__dirname, 'assets','img'), 
+//   { withFileTypes: true },
+//   (err, files) => {
+//     if (err)
+//       console.log(err);
+//     else {
+//       files.forEach(file => {
+//         if(file.isFile()){
+//           fs.copyFile( path.join(__dirname, 'assets','img',file.name), path.join(__dirname,'project-dist','assets','img',file.name), (err) => {
+//             if (err) throw err;
+//           });
+//         }
+//       });
+//     }
+//   });
+// fs.readdir(path.join(__dirname, 'assets','svg'), 
+//   { withFileTypes: true },
+//   (err, files) => {
+//     if (err)
+//       console.log(err);
+//     else {
+//       files.forEach(file => {
+//         if(file.isFile()){
+//           fs.copyFile( path.join(__dirname, 'assets','svg',file.name), path.join(__dirname,'project-dist','assets','svg',file.name), (err) => {
+//             if (err) throw err;
+//           });
+//         }
+//       });
+//     }
+//   });

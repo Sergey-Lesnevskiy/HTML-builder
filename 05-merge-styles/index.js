@@ -27,7 +27,7 @@ const readdirFiles = async (_path, extension) => {
               arr_css.push(file.name);
             }
           }
-          ) );   
+          ) );
       } 
     );
   }
@@ -35,7 +35,7 @@ const readdirFiles = async (_path, extension) => {
 };
 
 const readFilefromArr = async (arr) => {
-// console.log(arr);
+
   return  new Promise ((resolve,reject) => arr.forEach(file=>{ 
   
     const readableStream = fs.createReadStream(path.join(__dirname,'styles', file),{encoding: 'utf-8'},(err)=>{
@@ -52,24 +52,6 @@ const readFilefromArr = async (arr) => {
   );
 };
 
-// fs.readdir(path.join(__dirname, 'styles'), 
-//   { withFileTypes: true },
-//   (err, files) => {
-//     if (err)
-//       console.log(err);
-//     else {
-//       files.forEach(file => {
-//         if(file.isFile()&&path.extname(file.name)==='.css'){
-//           const readableStream = fs.createReadStream(path.join(__dirname,'styles', file.name), {encoding: 'utf-8'});
-//           readableStream.on('data', chunk => fs.appendFile(path.join(__dirname,'project-dist','bundle.css'),chunk,(err)=>{
-//             if(err)console.log(err);
-//           })
-            
-//           );
-//         }
-//       });
-//     }
-//   });
 
 writeFileAsync(path.join(__dirname,'project-dist','bundle.css'),'')
   .then(()=> readdirFiles(path.join(__dirname, 'styles'),'.css'))

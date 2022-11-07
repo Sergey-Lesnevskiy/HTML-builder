@@ -16,7 +16,6 @@ fs.readdir(path.join(__dirname, 'file-copy'), (err, files) => {
 });
   
 fs.readdir(path.join(__dirname, 'files'), 
-
   { withFileTypes: true },
   (err, files) => {
     if (err)
